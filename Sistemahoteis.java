@@ -1,367 +1,257 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
-// Classe abstrata Pessoa (classe abstrata com método abstrato)
 abstract class Pessoa {
     protected String nome;
     protected String cpf;
-    protected String endereco;
 
-    // Construtor da classe Pessoa
-    public Pessoa(String nome, String cpf, String endereco) {
+    public Pessoa(String nome, String cpf) {
         this.nome = nome;
         this.cpf = cpf;
-        this.endereco = endereco;
     }
 
-    // Método abstrato que deve ser implementado pelas subclasses
     public abstract String obterDetalhes();
-
-    // Getters e Setters
-    public String getNome() {
-        return nome;
-    }
-
-    public String getCpf() {
-        return cpf;
-    }
-
-    public String getEndereco() {
-        return endereco;
-    }
-
-    public void setEndereco(String endereco) {
-        this.endereco = endereco;
-    }
 }
 
-// Subclasse Cliente, herda de Pessoa e implementa o método abstrato obterDetalhes()
 class Cliente extends Pessoa {
-    private String telefone;
-    private String dataNascimento;
-    private String email; // Novo atributo
+    private LocalDate nascimento;
 
-    public Cliente(String nome, String cpf, String endereco, String telefone, String dataNascimento, String email) {
-        super(nome, cpf, endereco); // Chama o construtor da classe Pai
-        this.telefone = telefone;
-        this.dataNascimento = dataNascimento;
-        this.email = email;
+    public Cliente(String nome, String cpf, LocalDate nascimento) {
+        super(nome, cpf);
+        this.nascimento = nascimento;
     }
 
-    // Implementação do método abstrato
     @Override
     public String obterDetalhes() {
-        return "Cliente: " + nome + ", CPF: " + cpf + ", Telefone: " + telefone + ", Data de Nascimento: " + dataNascimento + ", Endereço: " + endereco + ", Email: " + email;
+        return "Nome: " + nome + "\n" +
+                "CPF: " + cpf + "\n" +
+                "Nascimento: " + nascimento.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
-    // Getters e Setters
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public String getDataNascimento() {
-        return dataNascimento;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    public void setDataNascimento(String dataNascimento) {
-        this.dataNascimento = dataNascimento;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public LocalDate getNascimento() {
+        return nascimento;
     }
 }
 
-// Subclasse Funcionario, herda de Pessoa e implementa o método abstrato obterDetalhes()
-class Funcionario extends Pessoa {
-    private String cargo;
-    private double salario; // Novo atributo
-
-    public Funcionario(String nome, String cpf, String endereco, String cargo, double salario) {
-        super(nome, cpf, endereco); // Chama o construtor da classe Pai
-        this.cargo = cargo;
-        this.salario = salario;
-    }
-
-    // Implementação do método abstrato
-    @Override
-    public String obterDetalhes() {
-        return "Funcionário: " + nome + ", CPF: " + cpf + ", Cargo: " + cargo + ", Salário: " + salario + ", Endereço: " + endereco;
-    }
-
-    // Getters e Setters
-    public String getCargo() {
-        return cargo;
-    }
-
-    public double getSalario() {
-        return salario;
-    }
-
-    public void setCargo(String cargo) {
-        this.cargo = cargo;
-    }
-
-    public void setSalario(double salario) {
-        this.salario = salario;
-    }
-}
-
-// Classe de Exceção Personalizada para validação de dados
-class ValidacaoException extends Exception {
-    public ValidacaoException(String mensagem) {
-        super(mensagem); // Chama o construtor da classe Exception
-    }
-}
-
-// Classe Reserva (com associação com Cliente)
+// Classe Reserva
 class Reserva {
-    private String checkIn;
-    private String checkOut;
-    private String tipoQuarto;
     private Cliente cliente;
-    private double preco;
-    private String pagamento; // Novo atributo para associação
+    private String tipoQuarto;
+    private LocalDate checkin;
+    private LocalDate checkout;
+    private double valor;
 
-    public Reserva(String checkIn, String checkOut, String tipoQuarto, Cliente cliente, double preco, String pagamento) {
-        this.checkIn = checkIn;
-        this.checkOut = checkOut;
+    public Reserva(Cliente cliente, String tipoQuarto, LocalDate checkin, LocalDate checkout, double valor) {
+        this.cliente = cliente;
         this.tipoQuarto = tipoQuarto;
-        this.cliente = cliente; // Associação com a classe Cliente
-        this.preco = preco;
-        this.pagamento = pagamento;
+        this.checkin = checkin;
+        this.checkout = checkout;
+        this.valor = valor;
     }
 
-    public Cliente getCliente() {
-        return cliente;
-    }
-
-    public String getCheckIn() {
-        return checkIn;
-    }
-
-    public String getCheckOut() {
-        return checkOut;
-    }
-
-    public String getTipoQuarto() {
-        return tipoQuarto;
-    }
-
-    public double getPreco() {
-        return preco;
-    }
-
-    public String getPagamento() {
-        return pagamento;
-    }
-
-    public void setPreco(double preco) {
-        this.preco = preco;
+    @Override
+    public String toString() {
+        return cliente.obterDetalhes() + "\n" +
+                "Tipo de Quarto: " + tipoQuarto + "\n" +
+                "Check-in: " + checkin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "\n" +
+                "Check-out: " + checkout.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "\n" +
+                "Valor: R$ " + valor + "\n" +
+                "--------";
     }
 }
 
-// Sistema de Reservas (com relação de associação com Reserva)
-class SistemaDeReservas {
-    private List<Reserva> reservas = new ArrayList<>();
-    private final String caminhoArquivo = "reservas.csv";
+// Gerenciamento de arquivo e reservas
+class ArquivoReserva {
+    private static final String CAMINHO_ARQUIVO = "reservas.txt";
+    private static final ArrayList<Reserva> reservasList = new ArrayList<>();
 
-    public SistemaDeReservas() {
-        carregarReservasDeArquivo(); // Carrega as reservas já feitas ao iniciar o sistema
-    }
-
-    public void adicionarReserva(Reserva reserva) {
-        reservas.add(reserva); // Adiciona a reserva à lista
-        salvarReservasEmArquivo(); // Salva no arquivo CSV
-    }
-
-    public void salvarReservasEmArquivo() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(caminhoArquivo, true))) {
-            for (Reserva reserva : reservas) {
-                // Salva informações de reserva no arquivo
-                writer.write(reserva.getCliente().getNome() + "," + reserva.getCliente().getCpf() + ","
-                        + reserva.getCheckIn() + "," + reserva.getCheckOut() + "," + reserva.getTipoQuarto() + ","
-                        + reserva.getPreco() + "," + reserva.getPagamento() + "\n");
-            }
+    public static void salvarReserva(Reserva reserva) {
+        reservasList.add(reserva);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CAMINHO_ARQUIVO, true))) {
+            writer.write(reserva.toString());
+            writer.newLine();
         } catch (IOException e) {
-            e.printStackTrace(); // Trata a exceção de IO
+            JOptionPane.showMessageDialog(null, "Erro ao salvar reserva: " + e.getMessage());
         }
     }
 
-    public void carregarReservasDeArquivo() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo))) {
+    public static String lerReservas() {
+        StringBuilder reservas = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_ARQUIVO))) {
             String linha;
             while ((linha = reader.readLine()) != null) {
-                if (linha.trim().isEmpty()) {
-                    continue;
-                }
-
-                // Lê dados do arquivo e os usa para criar reservas
-                String[] partes = linha.split(",");
-                if (partes.length < 7) { // Validação para garantir que os dados estão completos
-                    System.out.println("Linha ignorada por estar incompleta ou mal formatada: " + linha);
-                    continue;
-                }
-
-                String nome = partes[0];
-                String cpf = partes[1];
-                String checkIn = partes[2];
-                String checkOut = partes[3];
-                String tipoQuarto = partes[4];
-                double preco = Double.parseDouble(partes[5]);
-                String pagamento = partes[6];
-
-                Cliente cliente = new Cliente(nome, cpf, "Desconhecido", "Desconhecido", "Desconhecido", "Desconhecido");
-                Reserva reserva = new Reserva(checkIn, checkOut, tipoQuarto, cliente, preco, pagamento);
-                reservas.add(reserva); // Adiciona a reserva ao sistema
+                reservas.append(linha).append("\n");
             }
         } catch (IOException e) {
-            System.out.println("Erro ao carregar reservas: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, "Erro ao ler arquivo: " + e.getMessage());
         }
+        return reservas.toString();
     }
 }
 
-// Interface Gráfica
-class HotelReservationSystemGUI {
-    private SistemaDeReservas sistema;
-
-    public HotelReservationSystemGUI() {
-        sistema = new SistemaDeReservas(); // Cria uma instância do sistema de reservas
-    }
-
-    public void mostrarTelaPrincipal() {
-        JFrame frame = new JFrame("Sistema de Reservas");
-        frame.setSize(400, 300);
+// Tela inicial
+class TelaInicial {
+    public TelaInicial() {
+        JFrame frame = new JFrame("Sistema de Reservas de Hotel");
+        frame.setSize(600, 400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
 
-        // Criação do botão de reserva
-        JButton reservaButton = new JButton("Fazer Reserva");
-        reservaButton.addActionListener(e -> mostrarTelaReserva(frame));
+        JButton btnReservar = new JButton("Fazer Reserva");
+        JButton btnAdm = new JButton("Área Administrativa");
 
-        frame.add(new JLabel("Bem-vindo ao Sistema de Reservas do Hotel!", SwingConstants.CENTER), BorderLayout.CENTER);
-        frame.add(reservaButton, BorderLayout.SOUTH);
+        btnReservar.addActionListener(e -> new TelaCadastro());
+        btnAdm.addActionListener(e -> new TelaAdm());
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(2, 1, 10, 10));
+        panel.add(btnReservar);
+        panel.add(btnAdm);
+
+        frame.add(panel, BorderLayout.CENTER);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
+}
 
-    // Tela de reserva com os campos necessários
-    public void mostrarTelaReserva(JFrame frame) {
-        JFrame reservaFrame = new JFrame("Fazer Reserva");
-        reservaFrame.setSize(400, 400);
-        reservaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // Usando GridBagLayout para melhorar o alinhamento dos campos
-        reservaFrame.setLayout(new GridBagLayout());
+// Tela de cadastro
+class TelaCadastro {
+    public TelaCadastro() {
+        JFrame frame = new JFrame("Cadastro de Reserva");
+        frame.setSize(600, 400);
+        frame.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5); // Espaçamento entre os componentes
-        gbc.anchor = GridBagConstraints.WEST; // Alinhar à esquerda
+        gbc.insets = new Insets(10, 10, 10, 10);
 
         JTextField nomeField = new JTextField(20);
-        JTextField dataNascimentoField = new JTextField(20);
         JTextField cpfField = new JTextField(20);
-        JTextField checkInField = new JTextField(20);
-        JTextField checkOutField = new JTextField(20);
-        JTextField telefoneField = new JTextField(20); // Novo campo
-        JTextField enderecoField = new JTextField(20); // Novo campo
-        String[] tiposDeQuarto = {"Simples", "Médio", "Grande"};
-        JComboBox<String> tipoQuartoComboBox = new JComboBox<>(tiposDeQuarto);
+        JTextField nascimentoField = new JTextField(20);
 
-        JButton finalizarButton = new JButton("Finalizar Reserva");
-        finalizarButton.addActionListener(e -> {
+        JButton btnSalvar = new JButton("Salvar");
+        btnSalvar.addActionListener(e -> {
             try {
-                // Validação do CPF
-                String nome = nomeField.getText();
-                String cpf = cpfField.getText();
-                if (!Pattern.matches("\\d{11}", cpf)) {
-                    throw new ValidacaoException("CPF inválido!");
+                String nome = nomeField.getText().trim();
+                String cpf = cpfField.getText().trim();
+                LocalDate nascimento = LocalDate.parse(nascimentoField.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+                if (!cpf.matches("\\d{11}")) {
+                    throw new Exception("CPF inválido! Deve conter apenas 11 dígitos.");
                 }
 
-                // Criação da reserva
-                Cliente cliente = new Cliente(nome, cpf, "Desconhecido", telefoneField.getText(), dataNascimentoField.getText(), "email@exemplo.com");
-                Reserva reserva = new Reserva(checkInField.getText(), checkOutField.getText(), (String) tipoQuartoComboBox.getSelectedItem(), cliente, 200.00, "Cartão de Crédito");
-                sistema.adicionarReserva(reserva); // Adiciona a reserva ao sistema
+                Cliente cliente = new Cliente(nome, cpf, nascimento);
+                new TelaEscolherQuarto(cliente);
+                frame.dispose();
 
-                JOptionPane.showMessageDialog(reservaFrame, "Reserva realizada com sucesso!");
-            } catch (ValidacaoException ex) {
-                JOptionPane.showMessageDialog(reservaFrame, ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Erro: " + ex.getMessage());
             }
         });
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        reservaFrame.add(new JLabel("Nome:"), gbc);
+        frame.add(new JLabel("Nome:"), gbc);
         gbc.gridx = 1;
-        reservaFrame.add(nomeField, gbc);
+        frame.add(nomeField, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
-        reservaFrame.add(new JLabel("Data Nascimento:"), gbc);
+        frame.add(new JLabel("CPF:"), gbc);
         gbc.gridx = 1;
-        reservaFrame.add(dataNascimentoField, gbc);
+        frame.add(cpfField, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
-        reservaFrame.add(new JLabel("CPF:"), gbc);
+        frame.add(new JLabel("Nascimento (dd/MM/yyyy):"), gbc);
         gbc.gridx = 1;
-        reservaFrame.add(cpfField, gbc);
+        frame.add(nascimentoField, gbc);
 
-        gbc.gridx = 0;
+        gbc.gridx = 1;
         gbc.gridy = 3;
-        reservaFrame.add(new JLabel("Check-in:"), gbc);
-        gbc.gridx = 1;
-        reservaFrame.add(checkInField, gbc);
+        frame.add(btnSalvar, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        reservaFrame.add(new JLabel("Check-out:"), gbc);
-        gbc.gridx = 1;
-        reservaFrame.add(checkOutField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        reservaFrame.add(new JLabel("Telefone:"), gbc);
-        gbc.gridx = 1;
-        reservaFrame.add(telefoneField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 6;
-        reservaFrame.add(new JLabel("Endereço:"), gbc);
-        gbc.gridx = 1;
-        reservaFrame.add(enderecoField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 7;
-        reservaFrame.add(new JLabel("Tipo Quarto:"), gbc);
-        gbc.gridx = 1;
-        reservaFrame.add(tipoQuartoComboBox, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 8;
-        reservaFrame.add(finalizarButton, gbc);
-
-        reservaFrame.setVisible(true);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 }
 
-// Função principal
+// Tela para escolher o quarto
+class TelaEscolherQuarto {
+    public TelaEscolherQuarto(Cliente cliente) {
+        JFrame frame = new JFrame("Escolha de Quarto");
+        frame.setSize(600, 400);
+
+        JRadioButton quartoSimples = new JRadioButton("Quarto Simples - R$150/dia");
+        JRadioButton quartoLuxo = new JRadioButton("Quarto Luxo - R$300/dia");
+        JRadioButton quartoPremium = new JRadioButton("Quarto Premium - R$450/dia");
+
+        ButtonGroup grupoQuartos = new ButtonGroup();
+        grupoQuartos.add(quartoSimples);
+        grupoQuartos.add(quartoLuxo);
+        grupoQuartos.add(quartoPremium);
+
+        JButton btnConfirmar = new JButton("Confirmar");
+        btnConfirmar.addActionListener(e -> {
+            try {
+                String tipoQuarto;
+                double valor;
+
+                if (quartoSimples.isSelected()) {
+                    tipoQuarto = "Simples";
+                    valor = 150;
+                } else if (quartoLuxo.isSelected()) {
+                    tipoQuarto = "Luxo";
+                    valor = 300;
+                } else if (quartoPremium.isSelected()) {
+                    tipoQuarto = "Premium";
+                    valor = 450;
+                } else {
+                    throw new Exception("Selecione um tipo de quarto.");
+                }
+
+                Reserva reserva = new Reserva(cliente, tipoQuarto, LocalDate.now(), LocalDate.now().plusDays(1), valor);
+                ArquivoReserva.salvarReserva(reserva);
+
+                JOptionPane.showMessageDialog(frame, "Reserva confirmada: \n" + reserva.toString());
+                frame.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Erro: " + ex.getMessage());
+            }
+        });
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(4, 1, 10, 10));
+        panel.add(quartoSimples);
+        panel.add(quartoLuxo);
+        panel.add(quartoPremium);
+        panel.add(btnConfirmar);
+
+        frame.add(panel);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
+
+// Tela administrativa
+class TelaAdm {
+    public TelaAdm() {
+        JFrame frame = new JFrame("Área Administrativa");
+        frame.setSize(600, 400);
+
+        JTextArea textArea = new JTextArea(ArquivoReserva.lerReservas());
+        textArea.setEditable(false);
+
+        frame.add(new JScrollPane(textArea));
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
+
 public class Sistemahoteis {
     public static void main(String[] args) {
-        HotelReservationSystemGUI gui = new HotelReservationSystemGUI();
-        gui.mostrarTelaPrincipal();
+        new TelaInicial();
     }
 }
-
-//sobreescrito: O método obterDetalhes() é sobrescrito nas subclasses Cliente e Funcionario.
-//polimorfismo: ocorre quando as subclasses Cliente e Funcionario implementam o método obterDetalhes() de forma diferente.
