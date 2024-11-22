@@ -38,7 +38,6 @@ class Cliente extends Pessoa {
     }
 }
 
-// Classe Reserva
 class Reserva {
     private Cliente cliente;
     private String tipoQuarto;
@@ -62,6 +61,13 @@ class Reserva {
                 "Check-out: " + checkout.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "\n" +
                 "Valor: R$ " + valor + "\n" +
                 "--------";
+    }
+}
+
+// Classe Excepition para CPF inválido
+class CPFInvalidoException extends Exception {
+    public CPFInvalidoException(String mensagem) {
+        super(mensagem);
     }
 }
 
@@ -136,18 +142,19 @@ class TelaCadastro {
             try {
                 String nome = nomeField.getText().trim();
                 String cpf = cpfField.getText().trim();
-                LocalDate nascimento = LocalDate.parse(nascimentoField.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-
                 if (!cpf.matches("\\d{11}")) {
-                    throw new Exception("CPF inválido! Deve conter apenas 11 dígitos.");
+                    throw new CPFInvalidoException("CPF inválido! Deve conter apenas 11 dígitos.");
                 }
+                LocalDate nascimento = LocalDate.parse(nascimentoField.getText(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
                 Cliente cliente = new Cliente(nome, cpf, nascimento);
                 new TelaEscolherQuarto(cliente);
                 frame.dispose();
 
+            } catch (CPFInvalidoException ex) {
+                JOptionPane.showMessageDialog(frame, ex.getMessage(), "Erro de CPF", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(frame, "Erro: " + ex.getMessage());
+                JOptionPane.showMessageDialog(frame, "Erro: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -218,7 +225,7 @@ class TelaEscolherQuarto {
                 JOptionPane.showMessageDialog(frame, "Reserva confirmada: \n" + reserva.toString());
                 frame.dispose();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(frame, "Erro: " + ex.getMessage());
+                JOptionPane.showMessageDialog(frame, "Erro: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -235,7 +242,8 @@ class TelaEscolherQuarto {
     }
 }
 
-// Tela administrativa
+
+// Tela do ADM
 class TelaAdm {
     public TelaAdm() {
         JFrame frame = new JFrame("Área Administrativa");
